@@ -7,6 +7,8 @@ from sklearn import cross_validation
 def read_player_data(seasons=range(2010,2014), weeks=range(1,18)):
 	# dictionary player_scores[player_id][year][week] = FF score for player in that week of that year (None if they didnt play)
 	player_scores = {}
+	player_info = {}
+	player_totals = {}
 	for season in seasons:
 		for week in weeks:
 			filename = '../nfl_game_data/' + str(season) + '_' + str(week) + '.csv'
@@ -20,6 +22,7 @@ def read_player_data(seasons=range(2010,2014), weeks=range(1,18)):
 					fantasy_score = yahoo_fantasy_score(game_stats)
 					if player_id in player_scores:
 						player_scores[player_id][season][week] = fantasy_score
+						player_totals[player_id] += fantasy_score
 					else:
 						season_dict = {}
 						for season_year in seasons:
@@ -28,7 +31,10 @@ def read_player_data(seasons=range(2010,2014), weeks=range(1,18)):
 								week_dict[week_number] = None
 							season_dict[season_year] = week_dict
 						player_scores[player_id] = season_dict
-	return player_scores
+						player_info[player_id] = (player['name'], player['team'], player['pos'])
+						player_scores[player_id][season][week] = fantasy_score
+						player_totals[player_id] = fantasy_score
+	return player_info, player_scores, player_totals
 
 
 def baseline_predictions(p_scores):
@@ -84,9 +90,17 @@ def loocv_linear_regression(X, Y):
 
 # given a player's fantasy football scores, predicts the player's score in the given week
 # based on a decaying weighted average over scores in all previous weeks.
-def decaying_weighted_average_predict(scores, week):
-	X = scores[:week]
-	y = scores[week]
+def decaying_weighted_average_predict(player_seasons, query_season, query_week):
+	X = [0]
+	y = 0
+	for season in player_seasons:
+			season_weeks = player_seasons[season]
+			for week in season_weeks:
+				if season == query_season and week == query_week: 
+					y = season_weeks[week]
+					break
+				if season_weeks[week] is not None:
+					X.append(season_weeks[week]) 
 	w = np.arange(1.0 / len(X), 1 + 1.0 / len(X), 1.0 / len(X))
 	y_hat = sum([X[i] * w[i] for i in range(len(X))]) / sum(w)
 	return y_hat
@@ -133,9 +147,9 @@ def yahoo_fantasy_score(player_stats):
 
 
 # execute when python read_nfl.py is executed
-p_scores= read_player_data()
-baseline_mse = baseline_predictions(p_scores)
-X, y = extract_baseline_features(p_scores)
-lr_mse = loocv_linear_regression(X, y)
-print baseline_mse
-print lr_mse
+# p_info, p_scores = read_player_data()
+# baseline_mse = baseline_predictions(p_scores)
+# X, y = extract_baseline_features(p_scores)
+# lr_mse = loocv_linear_regression(X, y)
+# print baseline_mse
+# print lr_mse
