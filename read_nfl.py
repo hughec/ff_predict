@@ -4,15 +4,9 @@ from sklearn.linear_model import LinearRegression
 from sklearn import cross_validation
 
 # seasons and weeks are lists of seasons and weeks to read data for.
-# returns three dictionaries with player data, keys are player ids from nfl.com. 
-# each value in player_info is a tuple (name, team, position)
-# each value in player_scores is a list of fantasy scores.
-# each value in player_stats is a list of dictionary objects, 
-# where each object contains passing, rushing, and receiving stats.
 def read_player_data(seasons=range(2010,2014), weeks=range(1,18)):
-	player_info = {}
+	# dictionary player_scores[player_id][year][week] = FF score for player in that week of that year (None if they didnt play)
 	player_scores = {}
-	player_stats = {}
 	for season in seasons:
 		for week in weeks:
 			filename = '../nfl_game_data/' + str(season) + '_' + str(week) + '.csv'
@@ -20,23 +14,33 @@ def read_player_data(seasons=range(2010,2014), weeks=range(1,18)):
 				gamesreader = csv.DictReader(games)
 				for player in gamesreader:
 					# only include skill positions
-					if player['pos'] not in ['QB', 'RB', 'FB', 'WR', 'TE', '']: continue
-					p_id = player['id']
+					if player['pos'] not in ['QB', 'RB', 'FB', 'WR', 'TE']: continue
+					player_id = player['id']
 					game_stats = extract_game_stats(player)
-					if p_id in player_info:
-						player_scores[p_id].append(yahoo_fantasy_score(game_stats))
-						player_stats[p_id].append(game_stats)
+					fantasy_score = yahoo_fantasy_score(game_stats)
+					if player_id in player_scores:
+						player_scores[player_id][season][week] = fantasy_score
 					else:
-						player_info[p_id] = (player['name'], player['team'], player['pos'])
-						player_scores[p_id] = [yahoo_fantasy_score(game_stats)]
-						player_stats[p_id] = [game_stats]
-	return player_info, player_scores, player_stats
+						season_dict = {}
+						for season_year in seasons:
+							week_dict = {}
+							for week_number in weeks:
+								week_dict[week_number] = None
+							season_dict[season_year] = week_dict
+						player_scores[player_id] = season_dict
+	return player_scores
 
 
-def baseline_predictions(p_info, p_scores, p_stats):
+def baseline_predictions(p_scores):
 	squared_error = []
-	for p_id in p_info:
-		scores = p_scores[p_id]
+	for p_id in p_scores:
+		scores = [0]
+		p_seasons = p_scores[p_id]
+		for season in p_seasons:
+			p_weeks = p_seasons[season]
+			for week in p_weeks:
+				if p_weeks[week] is not None:
+					scores.append(p_weeks[week])
 		if sum(scores) / float(len(scores)) < 5.0: continue
 		for week in range(17, len(scores)):
 			y = scores[week]
@@ -45,11 +49,17 @@ def baseline_predictions(p_info, p_scores, p_stats):
 	return sum(squared_error) / len(squared_error)
 
 
-def extract_baseline_features(p_info, p_scores):
+def extract_baseline_features(p_scores):
 	X = []
 	y = []
-	for p_id in p_info:
-		scores = p_scores[p_id]
+	for p_id in p_scores:
+		scores = [0]
+		p_seasons = p_scores[p_id]
+		for season in p_seasons:
+			p_weeks = p_seasons[season]
+			for week in p_weeks:
+				if p_weeks[week] is not None:
+					scores.append(p_weeks[week])
 		if sum(scores) / float(len(scores)) < 5.0: continue
 		for week in range(17, len(scores)):
 			# phi(x) = [previous_game_score, 2_games_before, 3_games_before]
@@ -123,9 +133,9 @@ def yahoo_fantasy_score(player_stats):
 
 
 # execute when python read_nfl.py is executed
-p_info, p_scores, p_stats = read_player_data()
-baseline_mse = baseline_predictions(p_info, p_scores, p_stats)
-X, y = extract_baseline_features(p_info, p_scores)
+p_scores= read_player_data()
+baseline_mse = baseline_predictions(p_scores)
+X, y = extract_baseline_features(p_scores)
 lr_mse = loocv_linear_regression(X, y)
 print baseline_mse
 print lr_mse
