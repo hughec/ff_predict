@@ -1,15 +1,17 @@
 import csv
-import numpy as np
-from sklearn.linear_model import LinearRegression
-from sklearn import cross_validation
+import os
 
 # seasons and weeks are lists of seasons and weeks to read data for.
 def read_player_data(seasons=range(2010,2014), weeks=range(1,18)):
 	# dictionary player_scores[player_id][year][week] = FF score for player in that week of that year (None if they didnt play)
+        # dic player_info[player_id] to (name, team, pos)
 	player_scores = {}
+        player_info = {}
 	for season in seasons:
 		for week in weeks:
 			filename = '../nfl_game_data/' + str(season) + '_' + str(week) + '.csv'
+                        if not os.path.exists(filename):
+                                continue
 			with open(filename) as games:
 				gamesreader = csv.DictReader(games)
 				for player in gamesreader:
@@ -28,70 +30,8 @@ def read_player_data(seasons=range(2010,2014), weeks=range(1,18)):
 								week_dict[week_number] = None
 							season_dict[season_year] = week_dict
 						player_scores[player_id] = season_dict
-	return player_scores
-
-
-def baseline_predictions(p_scores):
-	squared_error = []
-	for p_id in p_scores:
-		scores = [0]
-		p_seasons = p_scores[p_id]
-		for season in p_seasons:
-			p_weeks = p_seasons[season]
-			for week in p_weeks:
-				if p_weeks[week] is not None:
-					scores.append(p_weeks[week])
-		if sum(scores) / float(len(scores)) < 5.0: continue
-		for week in range(17, len(scores)):
-			y = scores[week]
-			y_hat = decaying_weighted_average_predict(scores, week)
-			squared_error.append((y - y_hat)**2)
-	return sum(squared_error) / len(squared_error)
-
-
-def extract_baseline_features(p_scores):
-	X = []
-	y = []
-	for p_id in p_scores:
-		scores = [0]
-		p_seasons = p_scores[p_id]
-		for season in p_seasons:
-			p_weeks = p_seasons[season]
-			for week in p_weeks:
-				if p_weeks[week] is not None:
-					scores.append(p_weeks[week])
-		if sum(scores) / float(len(scores)) < 5.0: continue
-		for week in range(17, len(scores)):
-			# phi(x) = [previous_game_score, 2_games_before, 3_games_before]
-			phi = [scores[week - 1], scores[week - 2], scores[week - 3]]
-			X.append(phi)
-			y.append(scores[week])
-	return X, y
-
-
-def loocv_linear_regression(X, Y):
-	mse = 0
-	loo = cross_validation.LeaveOneOut(len(X))
-	regr = LinearRegression()
-	for train, test in loo:
-		X_train, X_test = [X[i] for i in train], X[test]
-		y_train, y_test = [Y[i] for i in train], Y[test]
-		regr.fit(X_train, y_train)
-		mse += (regr.predict(X_test) - y_test)**2
-	return float(mse) / len(X)
-
-
-
-# given a player's fantasy football scores, predicts the player's score in the given week
-# based on a decaying weighted average over scores in all previous weeks.
-def decaying_weighted_average_predict(scores, week):
-	X = scores[:week]
-	y = scores[week]
-	w = np.arange(1.0 / len(X), 1 + 1.0 / len(X), 1.0 / len(X))
-	y_hat = sum([X[i] * w[i] for i in range(len(X))]) / sum(w)
-	return y_hat
-
-
+                                                player_info[player_id] = (player['name'], player['team'], player['pos']) 						
+	return player_info, player_scores
 
 # given a player dictionary object for a game, returns a new dictionary containing only the necessary stats.
 def extract_game_stats(player):
@@ -130,12 +70,3 @@ def yahoo_fantasy_score(player_stats):
 	# two point conversions
 	score += 2 * player_stats['twoptm']
 	return score
-
-
-# execute when python read_nfl.py is executed
-p_scores= read_player_data()
-baseline_mse = baseline_predictions(p_scores)
-X, y = extract_baseline_features(p_scores)
-lr_mse = loocv_linear_regression(X, y)
-print baseline_mse
-print lr_mse

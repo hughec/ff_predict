@@ -2,7 +2,7 @@
 
 import nflgame
 
-seasons = range(2010,2014)
+seasons = range(2010,2015)
 weeks = range(1,18)
 
 for season in seasons:
