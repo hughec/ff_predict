@@ -1,17 +1,22 @@
 import csv
-import numpy as np
-from sklearn.linear_model import LinearRegression
-from sklearn import cross_validation
+import os
 
 # seasons and weeks are lists of seasons and weeks to read data for.
 def read_player_data(seasons=range(2010,2014), weeks=range(1,18)):
 	# dictionary player_scores[player_id][year][week] = FF score for player in that week of that year (None if they didnt play)
+        # dic player_info[player_id] to (name, team, pos)
 	player_scores = {}
+<<<<<<< HEAD
 	player_info = {}
 	player_totals = {}
+=======
+        player_info = {}
+>>>>>>> c4a12c0d737861f368f5a27863fff183b6e2c1cf
 	for season in seasons:
 		for week in weeks:
 			filename = '../nfl_game_data/' + str(season) + '_' + str(week) + '.csv'
+                        if not os.path.exists(filename):
+                                continue
 			with open(filename) as games:
 				gamesreader = csv.DictReader(games)
 				for player in gamesreader:
@@ -31,6 +36,7 @@ def read_player_data(seasons=range(2010,2014), weeks=range(1,18)):
 								week_dict[week_number] = None
 							season_dict[season_year] = week_dict
 						player_scores[player_id] = season_dict
+<<<<<<< HEAD
 						player_info[player_id] = (player['name'], player['team'], player['pos'])
 						player_scores[player_id][season][week] = fantasy_score
 						player_totals[player_id] = fantasy_score
@@ -106,6 +112,10 @@ def decaying_weighted_average_predict(player_seasons, query_season, query_week):
 	return y_hat
 
 
+=======
+                                                player_info[player_id] = (player['name'], player['team'], player['pos']) 						
+	return player_info, player_scores
+>>>>>>> c4a12c0d737861f368f5a27863fff183b6e2c1cf
 
 # given a player dictionary object for a game, returns a new dictionary containing only the necessary stats.
 def extract_game_stats(player):
@@ -144,6 +154,7 @@ def yahoo_fantasy_score(player_stats):
 	# two point conversions
 	score += 2 * player_stats['twoptm']
 	return score
+<<<<<<< HEAD
 
 
 # execute when python read_nfl.py is executed
@@ -153,3 +164,5 @@ def yahoo_fantasy_score(player_stats):
 # lr_mse = loocv_linear_regression(X, y)
 # print baseline_mse
 # print lr_mse
+=======
+>>>>>>> c4a12c0d737861f368f5a27863fff183b6e2c1cf

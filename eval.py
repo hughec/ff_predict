@@ -10,7 +10,7 @@ def get_top_players(player_info, player_totals, n):
 #Top 500 players
 n=100
 
-player_info, player_scores, player_totals = read_nfl.read_player_data(seasons=[2013, 2014], weeks=range(1,11))
+player_info, player_scores, player_totals = read_nfl.read_player_data(seasons=[2010, 2011, 2012, 2013])
 top_players = get_top_players(player_info, player_totals,n)
 
 top_player_ids = [player[0] for player in top_players]
@@ -22,13 +22,14 @@ baseline_squared_error = 0.0
 for player_id in top_player_ids:
     player_name_team_pos = player_info[player_id]
     historical_scores = player_scores[player_id]
-    year = 2014
+    year = 2013
     for week in historical_scores[year]:
         actual_score = historical_scores[year][week]
         oracle_prediction = oracle_data.get_oracle_data(player_name_team_pos, year, week)
         print player_name_team_pos, year, week, actual_score, oracle_prediction
         if oracle_prediction is not None:
             baseline_prediction = read_nfl.decaying_weighted_average_predict(historical_scores, year, week)
+            print 'baseline predicts', baseline_prediction
             oracle_squared_error += ((actual_score or 0) - float(oracle_prediction))**2
             baseline_squared_error += ((actual_score or 0) - baseline_prediction)**2
             m += 1
