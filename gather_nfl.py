@@ -29,7 +29,7 @@ def gather_teams(seasons, weeks, teams):
 					game = nflgame.games(season, week=week, home=team)
 					# Game not played yet, break
 					if len(game) == 0: break
-					game[0].players.filter(home=False).csv(filename)
+					game[0].players.csv(filename)
 					continue
 				except TypeError:
 					try:	
@@ -37,12 +37,13 @@ def gather_teams(seasons, weeks, teams):
 						# Game not played yet
 						if len(game) == 0: break
 						# If team is away, save stats for home players
-						game[0].players.filter(home=True).csv(filename)
+						game[0].players.csv(filename)
 						continue
 					except TypeError:
-					# Team has bye week
+					# Team has bye week, do not write file
 						continue
 
+# gather_players(seasons, weeks)
 gather_teams(seasons, weeks, teams)
 
 

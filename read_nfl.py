@@ -7,27 +7,42 @@ league = ['SEA', 'GB', 'ATL', 'NO', 'BAL', 'CIN', 'CHI', 'BUF', 'HOU',
 	'CLE', 'STL', 'MIN', 'DAL', 'SF', 'TB', 'CAR', 'DEN', 'IND', 'DET', 
 	'NYG', 'ARI', 'SD']
 
+# returns dictionaries for team offense and team defense, dictionary entries are by
+# team_offense[team][season][week] = {total offensive stats}
 def read_team_data(seasons=range(2010,2014), weeks=range(1,18), teams=league):
+	team_offense = {}
 	team_defense = {}
 	for team in teams:
+		team_offense[team] = {}
 		team_defense[team] = {}
 		for season in seasons:
+			team_offense[team][season] = {}
 			team_defense[team][season] = {}
 			for week in weeks:
 				filename = "../nfl_team_data/" + team + '_' + str(season) + '_' + str(week) + '.csv'
 				# no game in this week
 				if not os.path.exists(filename):
+					team_offense[team][season][week] = None
 					team_defense[team][season][week] = None
 					continue
+				offense_stats = Counter()
 				defense_stats = Counter()
-				print filename
 				with open(filename) as game:
 					gamereader = csv.DictReader(game)
+					opponent = None
 					for player in gamereader:
 						game_stats = Counter(extract_game_stats(player))
-						defense_stats = defense_stats + game_stats
+						if player['team'] == team: # update offensive stats
+							offense_stats = offense_stats + game_stats
+						else: # update defensive stats
+							opponent = player['team']
+							defense_stats = defense_stats + game_stats
+				# add entry for the opponent
+				offense_stats['opp'] = opponent
+				defense_stats['opp'] = opponent
+				team_offense[team][season][week] = offense_stats
 				team_defense[team][season][week] = defense_stats
-	return team_defense
+	return team_offense, team_defense
 
 
 # seasons and weeks are lists of seasons and weeks to read data for.
@@ -66,7 +81,7 @@ def read_player_data(seasons=range(2010,2014), weeks=range(1,18)):
                         player_info[player_id] = (player['name'], player['team'], player['pos']) 						
 	return player_info, player_scores
 
-# some games are missing stats like puntret_tds, this avoid errors associated with missing stats
+# some games are missing stats like puntret_tds, this avoids errors associated with missing stat headings
 def safe_stat_read(player, stat):
 	if stat in player:
 		return float(player[stat] or '0')
