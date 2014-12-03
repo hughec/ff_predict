@@ -16,8 +16,10 @@ def gather_players(seasons, weeks):
 		for week in weeks:
 			game = nflgame.games(season, week=week)
 			filename = '../nfl_game_data/' + str(season) + '_' + str(week) + '.csv'
-			nflgame.combine_game_stats(game).csv(filename)
-
+                        try:
+                                nflgame.combine_game_stats(game).csv(filename)
+                        except TypeError:
+                                continue
 
 def gather_teams(seasons, weeks, teams):
 	for team in teams:
