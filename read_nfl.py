@@ -64,6 +64,7 @@ def read_player_data(seasons=range(2010,2014), weeks=range(1,18)):
 					if player['pos'] not in ['QB', 'RB', 'FB', 'WR', 'TE']:
 						continue
 					player_id = player['id']
+					player_info[player_id] = (player['name'], player['team'], player['pos'])
 					game_stats = extract_game_stats(player)
 					fantasy_score = yahoo_fantasy_score(game_stats)
 					if player_id in player_scores:
@@ -82,8 +83,7 @@ def read_player_data(seasons=range(2010,2014), weeks=range(1,18)):
 							season_dict[season_year] = week_dict
 							stats_season_dict[season_year] = stats_week_dict
 						player_scores[player_id] = season_dict
-						player_stats[player_id] = stats_season_dict
-						player_info[player_id] = (player['name'], player['team'], player['pos'])						
+						player_stats[player_id] = stats_season_dict						
 	return player_info, player_scores, player_stats
 
 # some games are missing stats like puntret_tds, this avoids errors associated with missing stat headings
