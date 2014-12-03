@@ -11,7 +11,7 @@ def get_top_players(player_info, player_scores, n):
 
 #Calculate baseline, oracle and regression error for a given data set and regression
 #Only looks at weeks 2-17 so it can use season average
-def get_errors(p_info, p_scores, regr):
+def get_errors(p_info, p_scores, p_stats, team_o, team_d, regr):
     baseline_error = 0.0
     oracle_error = 0.0
     reg_error = 0.0
@@ -29,7 +29,7 @@ def get_errors(p_info, p_scores, regr):
                         oracle_error += (float(o) - actual) ** 2
                         b = baseline.season_average_predict(p_weeks,week)
                         baseline_error += (float(b) - actual) ** 2
-                        phi = reg.build_phi(p_info, p_scores, p_id, season, week)
+                        phi = reg.build_phi(p_info, p_scores, p_stats, team_o, team_d, p_id, season, week)
                         r = regr.predict(phi)
                         reg_error += (float(r) - actual) **2
                         sample_count +=1
@@ -42,21 +42,24 @@ def get_errors(p_info, p_scores, regr):
 #Get the top n players
 n=200
 
+# team data 2010-2014
+team_o, team_d = rn.read_team_data()
+
 #Training data 2010-2013
-train_info, train_scores = rn.read_player_data(seasons=[2010,2011,2012,2013])
+train_info, train_scores, train_stats = rn.read_player_data(seasons=[2010,2011,2012,2013])
 top_player_info = get_top_players(train_info, train_scores,n)
 
 #Test data 2014
-test_info, test_scores = rn.read_player_data(seasons=[2014])
+test_info, test_scores, test_stats = rn.read_player_data(seasons=[2014])
 
 #Train the linear regression classifier
-X, y = reg.extract_features(train_info, train_scores)
+X, y = reg.extract_features(train_info, train_scores, train_stats, team_o, team_d)
 regr = reg.train_regression(X,y)
 
 #Calculate training error
 print "Training Error"
-get_errors(top_player_info,train_scores,regr)
+get_errors(top_player_info,train_scores, train_stats, team_o, team_d, regr)
 
 #Calculate test error
 print "Test Error"
-get_errors(top_player_info,test_scores,regr)
+get_errors(top_player_info,test_scores, test_stats, team_o, team_d, regr)

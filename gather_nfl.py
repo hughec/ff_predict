@@ -43,7 +43,7 @@ def gather_teams(seasons, weeks, teams):
 					# Team has bye week, do not write file
 						continue
 
-# gather_players(seasons, weeks)
+gather_players(seasons, weeks)
 gather_teams(seasons, weeks, teams)
 
 

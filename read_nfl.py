@@ -9,7 +9,7 @@ league = ['SEA', 'GB', 'ATL', 'NO', 'BAL', 'CIN', 'CHI', 'BUF', 'HOU',
 
 # returns dictionaries for team offense and team defense, dictionary entries are by
 # team_offense[team][season][week] = {total offensive stats}
-def read_team_data(seasons=range(2010,2014), weeks=range(1,18), teams=league):
+def read_team_data(seasons=range(2010,2015), weeks=range(1,18), teams=league):
 	team_offense = {}
 	team_defense = {}
 	for team in teams:
@@ -61,7 +61,8 @@ def read_player_data(seasons=range(2010,2014), weeks=range(1,18)):
 				gamesreader = csv.DictReader(games)
 				for player in gamesreader:
 					# only include skill positions
-					if player['pos'] not in ['QB', 'RB', 'FB', 'WR', 'TE']: continue
+					if player['pos'] not in ['QB', 'RB', 'FB', 'WR', 'TE']:
+						continue
 					player_id = player['id']
 					game_stats = extract_game_stats(player)
 					fantasy_score = yahoo_fantasy_score(game_stats)
@@ -71,15 +72,19 @@ def read_player_data(seasons=range(2010,2014), weeks=range(1,18)):
 					else:
 						# initialize empty dict for seasons, weeks
 						season_dict = {}
+						stats_season_dict = {}
 						for season_year in seasons:
 							week_dict = {}
+							stats_week_dict = {}
 							for week_number in weeks:
 								week_dict[week_number] = None
+								stats_week_dict[week_number] = None
 							season_dict[season_year] = week_dict
+							stats_season_dict[season_year] = stats_week_dict
 						player_scores[player_id] = season_dict
-						player_stats[player_id] = season_dict
-                        player_info[player_id] = (player['name'], player['team'], player['pos']) 						
-	return player_info, player_scores
+						player_stats[player_id] = stats_season_dict
+						player_info[player_id] = (player['name'], player['team'], player['pos'])						
+	return player_info, player_scores, player_stats
 
 # some games are missing stats like puntret_tds, this avoids errors associated with missing stat headings
 def safe_stat_read(player, stat):
