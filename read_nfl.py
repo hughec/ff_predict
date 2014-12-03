@@ -18,7 +18,7 @@ def read_team_data(seasons=range(2010,2015), weeks=range(1,18), teams=league):
 		for season in seasons:
 			team_offense[team][season] = {}
 			team_defense[team][season] = {}
-			for week in weeks:
+			for week in range(1,18) if season != seasons[-1] else weeks:
 				filename = "../nfl_team_data/" + team + '_' + str(season) + '_' + str(week) + '.csv'
 				# no game in this week
 				if not os.path.exists(filename):
@@ -53,7 +53,7 @@ def read_player_data(seasons=range(2010,2014), weeks=range(1,18)):
 	player_info = {}
 	player_stats = {}
 	for season in seasons:
-		for week in weeks:
+		for week in range(1,18) if season!=seasons[-1] else weeks:
 			filename = '../nfl_game_data/' + str(season) + '_' + str(week) + '.csv'
 			if not os.path.exists(filename): 
 				continue
@@ -77,7 +77,7 @@ def read_player_data(seasons=range(2010,2014), weeks=range(1,18)):
 						for season_year in seasons:
 							week_dict = {}
 							stats_week_dict = {}
-							for week_number in weeks:
+							for week_number in range(1,18) if season!=seasons[-1] else weeks:
 								week_dict[week_number] = None
 								stats_week_dict[week_number] = None
 							season_dict[season_year] = week_dict

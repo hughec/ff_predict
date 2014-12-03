@@ -11,7 +11,7 @@ def get_top_players(player_info, player_scores, n):
 
 #Calculate baseline, oracle and regression error for a given data set and regression
 #Only looks at weeks 2-17 so it can use season average
-def get_errors(p_info, p_scores, p_stats, team_o, team_d, regr):
+def get_errors(p_info, p_scores, p_stats, team_o, team_d, regr, seasons, weeks):
     baseline_error = 0.0
     oracle_error = 0.0
     reg_error = 0.0
@@ -19,9 +19,9 @@ def get_errors(p_info, p_scores, p_stats, team_o, team_d, regr):
     for p_id in p_info:
         if p_id not in p_scores:
             continue
-        for season in p_scores[p_id]:
+        for season in seasons:
             p_weeks = p_scores[p_id][season]
-            for week in range(2,18):
+            for week in weeks:
                 if p_weeks[week] is not None:
                     o = oracle.get_oracle_data(p_info[p_id],season,week)
                     actual = p_scores[p_id][season][week]
@@ -50,7 +50,7 @@ train_info, train_scores, train_stats = rn.read_player_data(seasons=[2010,2011,2
 top_player_info = get_top_players(train_info, train_scores,n)
 
 #Test data 2014
-test_info, test_scores, test_stats = rn.read_player_data(seasons=[2014])
+test_info, test_scores, test_stats = rn.read_player_data(seasons=range(2010,2015))
 
 #Train the linear regression classifier
 X, y = reg.extract_features(train_info, train_scores, train_stats, team_o, team_d)
@@ -58,8 +58,8 @@ regr = reg.train_regression(X,y)
 
 #Calculate training error
 print "Training Error"
-get_errors(top_player_info,train_scores, train_stats, team_o, team_d, regr)
+get_errors(top_player_info,train_scores, train_stats, team_o, team_d, regr, range(2010,2014),range(1,18))
 
 #Calculate test error
 print "Test Error"
-get_errors(top_player_info,test_scores, test_stats, team_o, team_d, regr)
+get_errors(top_player_info,test_scores, test_stats, team_o, team_d, regr,[2014],range(1,18))

@@ -44,7 +44,7 @@ def build_phi(p_info, p_scores, p_stats, team_o, team_d, p_id, season, week):
         if team_o[player_team][season][week]:
         	opponent = team_o[player_team][season][week]['opp']
         else:
-        	print p_info[p_id], season, week
+        	#print p_info[p_id], season, week
         	opponent = None
         vs_opp_scores = [p_scores[p_id][s][w] for s in p_scores[p_id] for w in p_scores[p_id][s] \
                   if s <= season and (w < week or s < season) and p_scores[p_id][s][w] is not None \
