@@ -33,7 +33,12 @@ def build_phi(p_info, p_scores, p_stats, team_o, team_d, p_id, season, week):
         phi += scores[-5:]
 
         # scores for previous 5 home/away games
-        game_at_home = p_stats[p_id][season][week]['home']
+        #HACK for bug getting home games which is sometimes broke (just assumes that they are at home)
+        try:
+                game_at_home = p_stats[p_id][season][week]['home']
+        except TypeError:
+                game_at_home = True
+
         home_away_scores = [p_scores[p_id][s][w] for s in p_scores[p_id] for w in p_scores[p_id][s] \
                   if s <= season and (w < week or s < season) and p_scores[p_id][s][w] is not None \
                   and p_stats[p_id][s][w]['home'] == game_at_home]
